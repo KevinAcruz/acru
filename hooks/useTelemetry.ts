@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 export type TelemetryPing = {
   country: string;
   region: string;
+  latitude: number | null;
+  longitude: number | null;
   timestamp: number;
 };
 

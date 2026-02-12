@@ -44,7 +44,8 @@ export const TELEMETRY_KEYS = {
 
 export const TELEMETRY_CONFIG = {
   sessionTtlSec: 45,
-  recentPingLimit: 50,
+  recentPingLimit: 30,
+  geoPingMinIntervalSec: 60,
   rateLimitWindowSec: 60,
   rateLimitMaxPerWindow: 20,
 };

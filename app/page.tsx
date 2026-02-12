@@ -344,11 +344,35 @@ const DEFAULT_POINT: MapPoint = { x: 50, y: 28 };
 const enterTransition = { duration: 0.35, ease: "easeOut" as const };
 const SLIDE_ORDER: ViewMode[] = ["home", "certifications", "projects"];
 
+const US_REGION_ALIASES: Record<string, string> = {
+  "NORTH CAROLINA": "NC",
+  NC: "NC",
+};
+
+const US_STATE_POINTS: Record<string, MapPoint> = {
+  NC: lonLatToPoint(-79.0193, 35.7596),
+};
+
 function lonLatToPoint(lon: number, lat: number): MapPoint {
   return {
     x: ((lon + 180) / 360) * MAP_WIDTH,
     y: ((90 - lat) / 180) * MAP_HEIGHT,
   };
+}
+
+function resolvePingPoint(countryCode: string, regionLabel: string, worldData: WorldMapData): MapPoint {
+  const country = countryCode.toUpperCase();
+
+  if (country === "US") {
+    const normalizedRegion = regionLabel.trim().toUpperCase();
+    const stateCode = US_REGION_ALIASES[normalizedRegion] ?? normalizedRegion;
+    const statePoint = US_STATE_POINTS[stateCode];
+    if (statePoint) {
+      return statePoint;
+    }
+  }
+
+  return worldData.centroidByIso[country] ?? DEFAULT_POINT;
 }
 
 function ringToPath(ring: number[][]): string {
@@ -1129,7 +1153,10 @@ export default function Home() {
       continue;
     }
 
-    const point = worldData.centroidByIso[code] ?? DEFAULT_POINT;
+    const point =
+      typeof ping.longitude === "number" && typeof ping.latitude === "number"
+        ? lonLatToPoint(ping.longitude, ping.latitude)
+        : resolvePingPoint(code, ping.region, worldData);
     grouped.set(code, {
       code,
       label: `${ping.region} (${code})`,

@@ -6,6 +6,8 @@ export const runtime = "edge";
 type GeoPayload = {
   country: string;
   region: string;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type GeoHintRequest = NextRequest & {
@@ -13,6 +15,8 @@ type GeoHintRequest = NextRequest & {
     country?: string;
     region?: string;
     city?: string;
+    latitude?: string;
+    longitude?: string;
   };
 };
 
@@ -50,6 +54,19 @@ function parseSessionId(body: unknown): string | null {
   return trimmed;
 }
 
+function parseCoordinate(value: string | null | undefined, min: number, max: number): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const num = Number.parseFloat(value);
+  if (!Number.isFinite(num) || num < min || num > max) {
+    return null;
+  }
+
+  return num;
+}
+
 function getGeoFromRequest(request: GeoHintRequest): GeoPayload {
   const country =
     request.geo?.country?.trim() ||
@@ -63,9 +80,22 @@ function getGeoFromRequest(request: GeoHintRequest): GeoPayload {
     request.headers.get("x-vercel-ip-city")?.trim() ||
     country;
 
+  const latitude = parseCoordinate(
+    request.geo?.latitude || request.headers.get("x-vercel-ip-latitude"),
+    -90,
+    90,
+  );
+  const longitude = parseCoordinate(
+    request.geo?.longitude || request.headers.get("x-vercel-ip-longitude"),
+    -180,
+    180,
+  );
+
   return {
     country: country.toUpperCase().slice(0, 2) || "UN",
     region: region.slice(0, 80) || "Unknown",
+    latitude,
+    longitude,
   };
 }
 
@@ -75,6 +105,17 @@ async function incrementRate(redis: ReturnType<typeof getRedis>, key: string): P
     await redis.expire(key, TELEMETRY_CONFIG.rateLimitWindowSec);
   }
   return count;
+}
+
+function parseTimestamp(raw: unknown): number | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw === "string") {
+    const parsed = Number.parseInt(raw, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -114,20 +155,34 @@ export async function POST(request: NextRequest) {
     const sessionMember = `sid:${sessionId}`;
     const sessionKey = `${TELEMETRY_KEYS.sessionPrefix}${sessionId}`;
 
+    const previousBeatRaw = await redis.get(sessionKey);
+    const previousBeatMs = parseTimestamp(previousBeatRaw);
+    const shouldStoreGeoPing =
+      previousBeatMs === null ||
+      nowMs - previousBeatMs >= TELEMETRY_CONFIG.geoPingMinIntervalSec * 1000;
+
     await Promise.all([
-      redis.set(sessionKey, "1", { ex: TELEMETRY_CONFIG.sessionTtlSec }),
+      // Keep zset bounded even if summary endpoint is not hit frequently.
+      redis.zremrangebyscore(TELEMETRY_KEYS.sessionsZset, 0, nowMs),
+      redis.set(sessionKey, String(nowMs), { ex: TELEMETRY_CONFIG.sessionTtlSec }),
       redis.zadd(TELEMETRY_KEYS.sessionsZset, { score: expiresAt, member: sessionMember }),
-      redis.lpush(
-        TELEMETRY_KEYS.geoPingsList,
-        JSON.stringify({
-          country: geo.country,
-          region: geo.region,
-          timestamp: nowMs,
-        }),
-      ),
     ]);
 
-    await redis.ltrim(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1);
+    if (shouldStoreGeoPing) {
+      await Promise.all([
+        redis.lpush(
+          TELEMETRY_KEYS.geoPingsList,
+          JSON.stringify({
+            country: geo.country,
+            region: geo.region,
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+            timestamp: nowMs,
+          }),
+        ),
+        redis.ltrim(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1),
+      ]);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

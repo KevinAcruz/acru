@@ -6,8 +6,27 @@ export const runtime = "edge";
 type TelemetryPing = {
   country: string;
   region: string;
+  latitude: number | null;
+  longitude: number | null;
   timestamp: number;
 };
+
+function coerceNullableNumber(value: unknown): number | null {
+  if (value === null || typeof value === "undefined") {
+    return null;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
 
 function parsePing(raw: unknown): TelemetryPing | null {
   try {
@@ -31,6 +50,8 @@ function parsePing(raw: unknown): TelemetryPing | null {
     return {
       country: parsed.country,
       region: parsed.region,
+      latitude: coerceNullableNumber((parsed as { latitude?: unknown }).latitude),
+      longitude: coerceNullableNumber((parsed as { longitude?: unknown }).longitude),
       timestamp: parsed.timestamp,
     };
   } catch {
