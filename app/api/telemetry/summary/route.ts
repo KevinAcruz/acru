@@ -10,12 +10,16 @@ type TelemetryPing = {
 };
 
 function parsePing(raw: unknown): TelemetryPing | null {
-  if (typeof raw !== "string") {
-    return null;
-  }
-
   try {
-    const parsed = JSON.parse(raw) as TelemetryPing;
+    if (!raw) {
+      return null;
+    }
+
+    const parsed =
+      typeof raw === "string"
+        ? (JSON.parse(raw) as TelemetryPing)
+        : (raw as TelemetryPing);
+
     if (
       typeof parsed.country !== "string" ||
       typeof parsed.region !== "string" ||
@@ -43,7 +47,7 @@ export async function GET() {
 
     const [activeUsers, recentPingRaw] = await Promise.all([
       redis.zcard(TELEMETRY_KEYS.sessionsZset),
-      redis.lrange<string[]>(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1),
+      redis.lrange(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1),
     ]);
 
     const recentPings = recentPingRaw
