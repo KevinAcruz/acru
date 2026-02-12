@@ -16,8 +16,9 @@ export type TelemetrySummary = {
   updatedAt: string;
 };
 
-const HEARTBEAT_INTERVAL_MS = 15_000;
-const SUMMARY_INTERVAL_MS = 5_000;
+// Slower polling keeps Redis usage low while still showing useful live activity.
+const HEARTBEAT_INTERVAL_MS = 60_000;
+const SUMMARY_INTERVAL_MS = 15_000;
 
 function getSessionId(): string {
   const key = "acru-telemetry-session-id";
@@ -76,6 +77,9 @@ export function useTelemetry() {
       try {
         const payload = await fetchSummary();
         if (!payload || isCancelled) {
+          if (!isCancelled) {
+            setError("Telemetry unavailable.");
+          }
           return;
         }
 

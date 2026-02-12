@@ -80,14 +80,12 @@ export async function GET() {
       recentPings,
       updatedAt: new Date(nowMs).toISOString(),
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown telemetry summary error";
+  } catch {
     return NextResponse.json(
       {
-        error: "telemetry_summary_unavailable",
-        message,
+        error: "Telemetry unavailable",
       },
-      { status: 503 },
+      { status: 500 },
     );
   }
 }

@@ -40,12 +40,12 @@ export const TELEMETRY_KEYS = {
   sessionsZset: "telemetry:sessions:z",
   sessionPrefix: "telemetry:session:",
   geoPingsList: "telemetry:geo-pings",
+  geoPingThrottlePrefix: "telemetry:ping:",
 };
 
 export const TELEMETRY_CONFIG = {
-  sessionTtlSec: 45,
+  // Heartbeats are less frequent to cut Redis usage while keeping "who is online" good enough.
+  sessionTtlSec: 180,
   recentPingLimit: 30,
   geoPingMinIntervalSec: 60,
-  rateLimitWindowSec: 60,
-  rateLimitMaxPerWindow: 20,
 };
