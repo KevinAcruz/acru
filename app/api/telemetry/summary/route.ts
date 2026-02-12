@@ -35,23 +35,34 @@ function parsePing(raw: unknown): TelemetryPing | null {
 }
 
 export async function GET() {
-  const redis = getRedis();
-  const nowMs = Date.now();
+  try {
+    const redis = getRedis();
+    const nowMs = Date.now();
 
-  await redis.zremrangebyscore(TELEMETRY_KEYS.sessionsZset, 0, nowMs);
+    await redis.zremrangebyscore(TELEMETRY_KEYS.sessionsZset, 0, nowMs);
 
-  const [activeUsers, recentPingRaw] = await Promise.all([
-    redis.zcard(TELEMETRY_KEYS.sessionsZset),
-    redis.lrange<string[]>(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1),
-  ]);
+    const [activeUsers, recentPingRaw] = await Promise.all([
+      redis.zcard(TELEMETRY_KEYS.sessionsZset),
+      redis.lrange<string[]>(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1),
+    ]);
 
-  const recentPings = recentPingRaw
-    .map((entry) => parsePing(entry))
-    .filter((entry): entry is TelemetryPing => Boolean(entry));
+    const recentPings = recentPingRaw
+      .map((entry) => parsePing(entry))
+      .filter((entry): entry is TelemetryPing => Boolean(entry));
 
-  return NextResponse.json({
-    activeUsers,
-    recentPings,
-    updatedAt: new Date(nowMs).toISOString(),
-  });
+    return NextResponse.json({
+      activeUsers,
+      recentPings,
+      updatedAt: new Date(nowMs).toISOString(),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown telemetry summary error";
+    return NextResponse.json(
+      {
+        error: "telemetry_summary_unavailable",
+        message,
+      },
+      { status: 503 },
+    );
+  }
 }

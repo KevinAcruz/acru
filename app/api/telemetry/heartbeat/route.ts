@@ -78,55 +78,66 @@ async function incrementRate(redis: ReturnType<typeof getRedis>, key: string): P
 }
 
 export async function POST(request: NextRequest) {
-  const userAgent = request.headers.get("user-agent") || "";
-  if (BOT_UA_PATTERN.test(userAgent)) {
-    return NextResponse.json({ ignored: true, reason: "bot" }, { status: 202 });
+  try {
+    const userAgent = request.headers.get("user-agent") || "";
+    if (BOT_UA_PATTERN.test(userAgent)) {
+      return NextResponse.json({ ignored: true, reason: "bot" }, { status: 202 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const sessionId = parseSessionId(body);
+    if (!sessionId) {
+      return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
+    }
+
+    const ipHash = await hashText(getClientIp(request));
+    const redis = getRedis();
+
+    const sessionRateKey = `telemetry:rl:session:${sessionId}`;
+    const ipRateKey = `telemetry:rl:ip:${ipHash}`;
+
+    const [sessionCount, ipCount] = await Promise.all([
+      incrementRate(redis, sessionRateKey),
+      incrementRate(redis, ipRateKey),
+    ]);
+
+    if (
+      sessionCount > TELEMETRY_CONFIG.rateLimitMaxPerWindow ||
+      ipCount > TELEMETRY_CONFIG.rateLimitMaxPerWindow
+    ) {
+      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    }
+
+    const geo = getGeoFromRequest(request as GeoHintRequest);
+    const nowMs = Date.now();
+    const expiresAt = nowMs + TELEMETRY_CONFIG.sessionTtlSec * 1000;
+    const sessionMember = `sid:${sessionId}`;
+    const sessionKey = `${TELEMETRY_KEYS.sessionPrefix}${sessionId}`;
+
+    await Promise.all([
+      redis.set(sessionKey, "1", { ex: TELEMETRY_CONFIG.sessionTtlSec }),
+      redis.zadd(TELEMETRY_KEYS.sessionsZset, { score: expiresAt, member: sessionMember }),
+      redis.lpush(
+        TELEMETRY_KEYS.geoPingsList,
+        JSON.stringify({
+          country: geo.country,
+          region: geo.region,
+          timestamp: nowMs,
+        }),
+      ),
+    ]);
+
+    await redis.ltrim(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown telemetry heartbeat error";
+    return NextResponse.json(
+      {
+        error: "telemetry_heartbeat_unavailable",
+        message,
+      },
+      { status: 503 },
+    );
   }
-
-  const body = await request.json().catch(() => null);
-  const sessionId = parseSessionId(body);
-  if (!sessionId) {
-    return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
-  }
-
-  const ipHash = await hashText(getClientIp(request));
-  const redis = getRedis();
-
-  const sessionRateKey = `telemetry:rl:session:${sessionId}`;
-  const ipRateKey = `telemetry:rl:ip:${ipHash}`;
-
-  const [sessionCount, ipCount] = await Promise.all([
-    incrementRate(redis, sessionRateKey),
-    incrementRate(redis, ipRateKey),
-  ]);
-
-  if (
-    sessionCount > TELEMETRY_CONFIG.rateLimitMaxPerWindow ||
-    ipCount > TELEMETRY_CONFIG.rateLimitMaxPerWindow
-  ) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-  }
-
-  const geo = getGeoFromRequest(request as GeoHintRequest);
-  const nowMs = Date.now();
-  const expiresAt = nowMs + TELEMETRY_CONFIG.sessionTtlSec * 1000;
-  const sessionMember = `sid:${sessionId}`;
-  const sessionKey = `${TELEMETRY_KEYS.sessionPrefix}${sessionId}`;
-
-  await Promise.all([
-    redis.set(sessionKey, "1", { ex: TELEMETRY_CONFIG.sessionTtlSec }),
-    redis.zadd(TELEMETRY_KEYS.sessionsZset, { score: expiresAt, member: sessionMember }),
-    redis.lpush(
-      TELEMETRY_KEYS.geoPingsList,
-      JSON.stringify({
-        country: geo.country,
-        region: geo.region,
-        timestamp: nowMs,
-      }),
-    ),
-  ]);
-
-  await redis.ltrim(TELEMETRY_KEYS.geoPingsList, 0, TELEMETRY_CONFIG.recentPingLimit - 1);
-
-  return NextResponse.json({ ok: true });
 }
