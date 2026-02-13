@@ -519,14 +519,14 @@ function HeroCard({ locale }: { locale: Locale }) {
           transition={{ duration: 0.35, ease: "easeOut" }}
         >
           <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-6xl">Kevin A. Cruz</h1>
-          <p className="mt-3 text-base text-white/92">{t.city}</p>
+                    <p className="mt-4 text-sm text-white/70">
+            {t.basedIn}: <span className="text-white/92">{t.city}</span>
+          </p>
           <p className="mt-3 inline-flex rounded-full border border-[#f06a6a]/30 bg-[#2a1518]/70 px-3 py-1 text-sm text-white/90 md:text-base">
             {t.role}
           </p>
           <p className="mt-6 max-w-2xl text-white/70">{t.intro}</p>
-          <p className="mt-4 text-sm text-white/70">
-            {t.basedIn}: <span className="text-white/92">{t.city}</span>
-          </p>
+
         </motion.div>
       </AnimatePresence>
     </motion.section>
