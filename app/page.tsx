@@ -118,7 +118,7 @@ const PROJECTS: Record<Locale, ProjectItem[]> = {
         "Repeatable parameter testing workflow",
         "Real-time audio processing with attention to latency",
       ],
-      image: "/acru.png",
+      image: "/PRDXsim.png",
     },
     {
       period: "2025",
