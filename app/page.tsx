@@ -291,9 +291,9 @@ const FEATURE_ITEMS: Record<Locale, FeatureItem[]> = {
 const UI_TEXT = {
   en: {
     portfolio: "About",
-    role: "Computer Science student at UNCC focused on backend systems and practical infrastructure",
+    role: "CS Student | Backend & Systems",
     intro:
-      "I build reliable tools and backend systems with an emphasis on clarity, structure, and real-world usefulness.",
+      "I build reliable tools and backend systems with an emphasis on clarity, structure, and real-world usefulness. As a student, I’m especially interested in understanding how systems behave beyond the surface level.",
     basedIn: "Based in",
     city: "Charlotte, NC",
     siteFeatures: "Site Features",
@@ -315,9 +315,9 @@ const UI_TEXT = {
   },
   es: {
     portfolio: "Sobre Mi",
-    role: "Estudiante de Ciencias de la Computacion en UNCC con enfoque en sistemas backend e infraestructura practica",
+    role: "Estudiante de CS | Backend y Sistemas",
     intro:
-      "Construyo herramientas confiables y sistemas backend con enfasis en claridad, estructura y utilidad real.",
+      "Construyo herramientas confiables y sistemas backend con énfasis en la claridad, la estructura y la utilidad en el mundo real. Como estudiante, me interesa especialmente comprender cómo se comportan los sistemas más allá de lo superficial.",
     basedIn: "Ubicado en",
     city: "Charlotte, NC",
     siteFeatures: "Funciones del Sitio",
