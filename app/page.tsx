@@ -92,6 +92,21 @@ const PROJECTS: Record<Locale, ProjectItem[]> = {
   en: [
     {
       period: "2026",
+      title: "Physical Guitar Pedal",
+      summary:
+        "A physical guitar pedal with a custom built pcb board designed to host a physical version of the PRDX DSP.",
+      stack: "PCB design",
+      details:
+        "Designed a backend-focused control panel to monitor and manage remote services. The system separates command execution from status reporting to reduce operational mistakes and improve reliability.",
+      highlights: [
+        "Remote start/stop with state validation",
+        "Clear separation between command and telemetry layers",
+        "Designed with operational safety in mind",
+      ],
+      image: "/acru.png",
+    },
+    {
+      period: "2026",
       title: "Remote Server Manager",
       summary:
         "A remote control panel for managing server processes with clear state checks and safe start/stop actions.",
@@ -253,11 +268,11 @@ const FEATURE_ITEMS: Record<Locale, FeatureItem[]> = {
   en: [
     {
       title: "Heartbeat Telemetry",
-      description: "Client heartbeat every 15s with session TTL in Upstash Redis.",
+      description: "Client heartbeat every 30s with session TTL in Upstash Redis.",
     },
     {
       title: "Live Summary Polling",
-      description: "UI refreshes active users and recent pings every 5 seconds.",
+      description: "UI refreshes active users and recent pings every 30 seconds.",
     },
     {
       title: "Abuse Controls",
@@ -518,7 +533,7 @@ function HeroCard({ locale }: { locale: Locale }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
         >
-          <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-6xl">Kevin A. Cruz</h1>
+          <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-6xl">Kevin Alvarado-Cruz</h1>
                     <p className="mt-4 text-sm text-white/70">
             {t.basedIn}: <span className="text-white/92">{t.city}</span>
           </p>
