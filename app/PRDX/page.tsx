@@ -758,7 +758,7 @@ export default function PrdxPage() {
           ) : null}
         </AnimatePresence>
         <AnimatePresence initial={false}>
-        {!cleanMode && !performanceMode ? (
+        {introDone && !cleanMode && !performanceMode ? (
           <motion.div
             key="prdx-fx"
             className="pointer-events-none absolute inset-0"
@@ -984,7 +984,7 @@ export default function PrdxPage() {
             transition={{ duration: 0.45, delay: 0.28 }}
             className="text-xs uppercase tracking-[0.28em] text-[#e49393]"
           >
-            Signal Ritual
+            ༒︎༒︎༒︎
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
@@ -1012,7 +1012,7 @@ export default function PrdxPage() {
             transition={{ duration: 0.55, delay: 0.42 }}
             className="mt-6 max-w-2xl text-sm leading-relaxed text-[#f3d0d0]/85 md:text-base"
           >
-            An immersive amp simulator built for spatial depth, ambient movement, and playable tone. PRDX explores the paradox of sound — where reflections move outward, return inward, and reshape the signal in real time.
+            An immersive amp simulator built for spatial depth, ambient movement, and playable tone. PRDX explores the paradox of sound. Where reflections move outward, return inward, and reshape the signal in real time.
           </motion.p>
 
           <motion.div
@@ -1049,7 +1049,7 @@ export default function PrdxPage() {
               },
               {
                 title: "SPACE",
-                text: "Created as a standalone sonic experience — not a replica, but a spatial instrument in its own right.",
+                text: "Created as a standalone sonic experience. Not a replica, but a spatial instrument in its own right.",
               },
             ].map((item, index) => (
               <motion.article
@@ -1097,8 +1097,8 @@ export default function PrdxPage() {
               transition={{ duration: 0.25, ease: "easeOut" }}
             />
             <div className="relative z-[2]">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#e19797]">DEMO VAULT</p>
-            <p className="mt-2 text-sm text-[#f4d9d9]/82">A short playthrough exploring PRDX’s spatial movement, stereo widening, and core tone controls.</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#e19797]">༒︎DEMO༒︎</p>
+            <p className="mt-2 text-sm text-[#f4d9d9]/82">A short playthrough exploring PRDX’s spatial reverb, stereo widening, and core tone controls.</p>
             <motion.div
               className="relative z-[6] mt-4 border p-2"
               style={{
@@ -1313,7 +1313,7 @@ export default function PrdxPage() {
         </div>
 
         <AnimatePresence initial={false}>
-        {!cleanMode ? (
+        {introDone && !cleanMode ? (
         <>
         <motion.div
           className="pointer-events-none absolute right-[-8%] top-1/2 z-[9] block -translate-y-1/2 px-6 md:px-10 will-change-transform"
@@ -1627,5 +1627,4 @@ export default function PrdxPage() {
     </div>
   );
 }
-
 
