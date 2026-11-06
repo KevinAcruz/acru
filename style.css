@@ -19,7 +19,6 @@ html {
 }
 
 body {
-  position: relative;
   margin: 0;
   padding: 32px 16px 48px;
   color: var(--ink);
@@ -215,35 +214,9 @@ footer span {
   border-color: var(--lo) var(--hi) var(--hi) var(--lo);
 }
 
-.floaters {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.floater {
-  position: absolute;
-  animation: bob 6s ease-in-out infinite;
-}
-
-.left { left: calc(50% - 480px); }
-.right { right: calc(50% - 480px); }
-
-@keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-10px) rotate(4deg); }
-}
-
-@media (max-width: 1000px) {
-  .floaters { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .floater { animation: none; }
+canvas {
+  display: block;
+  image-rendering: pixelated;
 }
 
 @media (max-width: 600px) {

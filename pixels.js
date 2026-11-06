@@ -11,21 +11,6 @@ const colors = {
 };
 
 const sprites = {
-  pick: [
-    "..kkkkkkkk..",
-    ".krrrrrrrrk.",
-    "krrwwrrrrrrk",
-    "krwwrrrrrrrk",
-    "krrrrrrrrrrk",
-    "krrrrrrrrrrk",
-    ".krrrrrrrrk.",
-    ".krrrrrrrrk.",
-    "..krrrrrrk..",
-    "..krrrrrrk..",
-    "...krrrrk...",
-    "....krrk....",
-    ".....kk....."
-  ],
   jack: [
     "kkkkkkkkkkkkk",
     "kgggggggggggk",
@@ -39,18 +24,6 @@ const sprites = {
     "kggggkkkggggk",
     "kgggggggggggk",
     "kkkkkkkkkkkkk"
-  ],
-  cassette: [
-    "kkkkkkkkkkkkkkkk",
-    "kddddddddddddddk",
-    "kdccccccccccccdk",
-    "kdcrrrrrrrrrrcdk",
-    "kdckkkcccckkkcdk",
-    "kdckwkcccckwkcdk",
-    "kdckkkcccckkkcdk",
-    "kdccccccccccccdk",
-    "kddddkkkkkkddddk",
-    "kkkkkkkkkkkkkkkk"
   ],
   floppy: [
     "kkkkkkkkkkkkkk",
@@ -93,82 +66,37 @@ const sprites = {
     "kwwwwwwwwwwwwk",
     "kwwwwwwwwwwwwk",
     "kkkkkkkkkkkkkk"
-  ],
-  star: [
-    "...y...",
-    "...y...",
-    "..yyy..",
-    "yyyyyyy",
-    "..yyy..",
-    "...y...",
-    "...y..."
-  ],
-  moon: [
-    "...cccc.",
-    "..ccc...",
-    ".ccc....",
-    ".cc.....",
-    ".cc.....",
-    ".cc.....",
-    ".ccc....",
-    "..ccc...",
-    "...cccc."
-  ],
-  note: [
-    ".....cc..",
-    ".....ccc.",
-    ".....c.cc",
-    ".....c..c",
-    ".....c...",
-    ".....c...",
-    "..cccc...",
-    ".ccccc...",
-    "..ccc...."
   ]
 };
 
-function draw(name, size) {
-  const rows = sprites[name];
-  let pixels = "";
+function draw(el) {
+  const rows = sprites[el.dataset.sprite];
 
+  // whole screen pixels only, otherwise they come out uneven when the display is scaled
+  const dpr = window.devicePixelRatio;
+  const px = Math.round(2 * dpr);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = rows[0].length * px;
+  canvas.height = rows.length * px;
+  canvas.style.width = canvas.width / dpr + "px";
+  canvas.style.height = canvas.height / dpr + "px";
+
+  const ctx = canvas.getContext("2d");
   rows.forEach((row, y) => {
     [...row].forEach((ch, x) => {
-      if (colors[ch]) pixels += `<rect x="${x}" y="${y}" width="1" height="1" fill="${colors[ch]}"/>`;
+      if (!colors[ch]) return;
+      ctx.fillStyle = colors[ch];
+      ctx.fillRect(x * px, y * px, px, px);
     });
   });
 
-  const w = rows[0].length;
-  const h = rows.length;
-  return `<svg viewBox="0 0 ${w} ${h}" width="${w * size}" height="${h * size}" shape-rendering="crispEdges">${pixels}</svg>`;
+  el.replaceChildren(canvas);
 }
 
-document.querySelectorAll("[data-sprite]").forEach(el => {
-  el.innerHTML = draw(el.dataset.sprite, 2);
-});
+function drawAll() {
+  document.querySelectorAll("[data-sprite]").forEach(draw);
+}
 
-// the stuff floating in the margins
-const floaters = [
-  ["pick", "left", 6],
-  ["moon", "right", 4],
-  ["computer", "right", 20],
-  ["star", "left", 26],
-  ["cassette", "left", 44],
-  ["jack", "right", 42],
-  ["note", "right", 63],
-  ["floppy", "left", 68],
-  ["star", "right", 85]
-];
-
-const layer = document.createElement("div");
-layer.className = "floaters";
-
-floaters.forEach(([name, side, top], i) => {
-  const el = document.createElement("span");
-  el.className = "floater " + side;
-  el.style.top = top + "%";
-  el.style.animationDelay = -i + "s";
-  el.innerHTML = draw(name, 4);
-  layer.appendChild(el);
-});
-
-document.body.appendChild(layer);
+drawAll();
+window.addEventListener("resize", drawAll);
